@@ -18,25 +18,28 @@
   "nativescript": {
     "id": "org.nativescript.groceries",
     "tns-ios": {
-      "version": "2.1.0"
+      "version": "2.2.1"
     },
     "tns-android": {
       "version": "2.2.0"
     }
   },
   "dependencies": {
-    "@angular/common": "2.0.0-rc.3",
-    "@angular/compiler": "2.0.0-rc.3",
-    "@angular/core": "2.0.0-rc.3",
-    "@angular/http": "2.0.0-rc.3",
-    "@angular/platform-browser": "2.0.0-rc.3",
-    "@angular/platform-browser-dynamic": "2.0.0-rc.3",
-    "@angular/platform-server": "2.0.0-rc.3",
-    "@angular/router": "3.0.0-alpha.7",
+    "@angular/common": "2.0.0-rc.4",
+    "@angular/compiler": "2.0.0-rc.4",
+    "@angular/core": "2.0.0-rc.4",
+    "@angular/http": "2.0.0-rc.4",
+    "@angular/platform-browser": "2.0.0-rc.4",
+    "@angular/platform-browser-dynamic": "2.0.0-rc.4",
+    "@angular/platform-server": "2.0.0-rc.4",
+    "@angular/router": "3.0.0-beta.2",
+    "nativescript-angular": "0.3.1",
+    "reflect-metadata": "0.1.8",
+    "rxjs": "5.0.0-beta.6",
+    "tns-core-modules": "2.2.1",
     "email-validator": "^1.0.4",
-    "everlive-sdk": "^1.7.2",
-    "nativescript-angular": "0.2.0",
-    "tns-core-modules": "2.1.0"
+    "everlive-sdk": "*",
+    "zone.js": "0.6.17"
   },
   "devDependencies": {
     "babel-traverse": "6.7.6",
