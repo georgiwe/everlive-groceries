@@ -140,7 +140,7 @@ export class GroceriesComponent implements OnInit {
     let items = this.store.items.value;
     let list = [];
     for (let i = 0, size = items.length; i < size ; i++) {
-      list.push(items[i].name);
+      list.push(items[i].Name);
     }
     SocialShare.shareText(list.join(", ").trim());
   }

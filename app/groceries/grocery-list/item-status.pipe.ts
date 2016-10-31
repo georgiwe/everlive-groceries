@@ -10,7 +10,7 @@ export class ItemStatusPipe implements PipeTransform {
   transform(items: Array<Grocery>, deleted: boolean) {
     if (items && items.length) {
       this.value = items.filter((grocery: Grocery) => {
-        return grocery.deleted === deleted;
+        return grocery.Deleted === deleted;
       });
     }
     return this.value;

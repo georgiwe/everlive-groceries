@@ -28,12 +28,13 @@ export class LoginComponent implements OnInit {
   @ViewChild("email") email: ElementRef;
   @ViewChild("password") password: ElementRef;
 
-  constructor(private router: Router,
+  constructor(
+    private router: Router,
     private userService: LoginService,
     private page: Page) {
     this.user = new User();
-    this.user.email = "user@nativescript.org";
-    this.user.password = "password";
+    this.user.email = "test@test.test";
+    this.user.password = "qweqwe";
   }
 
   ngOnInit() {
@@ -78,6 +79,7 @@ export class LoginComponent implements OnInit {
   }
 
   signUp() {
+    console.log('signUp called');
     if (getConnectionType() === connectionType.none) {
       alert("Groceries requires an internet connection to register.");
       return;

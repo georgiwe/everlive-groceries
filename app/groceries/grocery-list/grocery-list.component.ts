@@ -34,6 +34,10 @@ export class GroceryListComponent {
           alert("An error occurred loading your grocery list.");
         }
       );
+
+      // this.store.items.subscribe((res) => {
+      //   console.log('list: ' + JSON.stringify(res));
+      // });
   }
 
   // The following trick makes the background color of each cell
@@ -54,8 +58,8 @@ export class GroceryListComponent {
   }
 
   toggleDone(grocery: Grocery) {
-    if (grocery.deleted) {
-      grocery.done = !grocery.done;
+    if (grocery.Deleted) {
+      grocery.Done = !grocery.Done;
       return;
     }
 

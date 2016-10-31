@@ -1,20 +1,32 @@
 import { Injectable } from "@angular/core";
-import { getString, setString } from "application-settings";
+// import { getString, setString } from "application-settings";
+import { Item } from './everlive-interfaces';
+import Everlive from "everlive-sdk";
 
-const tokenKey = "token";
+const appId = "1duiu8yp6l0bz342"; // TODO get from config
 
+Injectable()
 export class BackendService {
-  static apiUrl = "https://api.everlive.com/v1/GWfRtXi1Lwt4jcqK/";
+  _instance: Everlive;
 
-  static isLoggedIn(): boolean {
-    return !!getString("token");
+  constructor() {
+    this._instance = new Everlive({ appId: appId, schema: 'https', offline: true });
   }
 
-  static get token(): string {
-    return getString("token");
+  getDataObject<T extends Item>(collectionName: string) {
+    return this._instance.data<T>(collectionName);
   }
 
-  static set token(theToken: string) {
-    setString("token", theToken);
+  get userManagement() {
+    return this._instance.users;
+  }
+
+  getNewQuery() {
+    return new Everlive.Query();
+  }
+
+  isLoggedIn(): Promise<boolean> {
+    return this._instance.authentication.getAuthenticationStatus()
+      .then(statusInfo => statusInfo.status === Everlive.Constants.AuthStatus.authenticated, err => false);
   }
 }
