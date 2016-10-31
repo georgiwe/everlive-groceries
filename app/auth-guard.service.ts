@@ -5,16 +5,24 @@ import { BackendService } from "./shared/backend.service";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private router: Router) { }
+  constructor(private router: Router, private backendService: BackendService) { }
 
   canActivate() {
-    if (BackendService.isLoggedIn()) {
-      return true;
-    }
-    else {
-      this.router.navigate(["/login"]);
-      return false;
-    }
+    // this.router.navigate(["/login"]);
+    // return false;
+
+    return this.backendService.isLoggedIn().then(isAuthenticated => {
+      if (!isAuthenticated) {
+        this.router.navigate(["/login"]);
+      }
+      return isAuthenticated;
+    });
+    // if (this.BackendService.isLoggedIn()) {
+    //   return true;
+    // }
+    // else {
+    //   this.router.navigate(["/login"]);
+    //   return false;
+    // }
   }
 }
-

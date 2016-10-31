@@ -3,6 +3,8 @@ import { Http, Headers, Response, ResponseOptions } from "@angular/http";
 import { Observable, BehaviorSubject } from "rxjs/Rx";
 import "rxjs/add/operator/map";
 
+import { Data, GroceryEntry } from '../../shared/everlive-interfaces';
+
 import { BackendService } from "../../shared";
 import { Grocery } from "./grocery.model";
 
@@ -11,45 +13,35 @@ export class GroceryService {
   items: BehaviorSubject<Array<Grocery>> = new BehaviorSubject([]);
 
   private allItems: Array<Grocery> = [];
+  private groceryData: Data<GroceryEntry>;
 
-  constructor(private http: Http, private zone: NgZone) { }
+  constructor(private http: Http, private zone: NgZone, private backendService: BackendService) {
+    this.groceryData = this.backendService.getDataObject<GroceryEntry>('Groceries');
+  }
 
   load() {
-    let headers = this.getHeaders();
-    headers.append("X-Everlive-Sort", JSON.stringify({ ModifiedAt: -1 }));
+    let query = this.backendService.getNewQuery();
+    query.orderDesc('ModifiedAt');
 
-    return this.http.get(BackendService.apiUrl + "Groceries", {
-      headers: headers
-    })
-    .map(res => res.json())
-    .map(data => {
-      data.Result.forEach((grocery) => {
-        this.allItems.push(
-          new Grocery(
-            grocery.Id,
-            grocery.Name,
-            grocery.Done || false,
-            grocery.Deleted || false
-          )
-        );
+    let loadPromise = this.groceryData.get(query)
+      .then(data => {
+        this.allItems = data.result.map(e => new Grocery(e.Id, e.Name, e.Done, e.Deleted));
         this.publishUpdates();
       });
-    })
-    .catch(this.handleErrors);
+
+    return Observable.from(loadPromise)
+      .catch(this.handleErrors);
   }
 
   add(name: string) {
-    return this.http.post(
-      BackendService.apiUrl + "Groceries",
-      JSON.stringify({ Name: name }),
-      { headers: this.getHeaders() }
-    )
-    .map(res => res.json())
-    .map(data => {
-      this.allItems.unshift(new Grocery(data.Result.Id, name, false, false));
-      this.publishUpdates();
-    })
-    .catch(this.handleErrors);
+    let createPromise = this.groceryData.create({ Name: name })
+      .then(res => {
+        this.allItems.unshift(new Grocery(res.result.Id, name));
+        this.publishUpdates();
+      });
+
+    return Observable.from(createPromise)
+      .catch(this.handleErrors);
   }
 
   setDeleteFlag(item: Grocery) {
@@ -70,54 +62,46 @@ export class GroceryService {
   }
 
   restore() {
-    let indeces = [];
+    let ids = [];
     this.allItems.forEach((grocery) => {
       if (grocery.deleted && grocery.done) {
-        indeces.push(grocery.id);
+        ids.push(grocery.id);
       }
     });
 
-    let headers = this.getHeaders();
-    headers.append("X-Everlive-Filter", JSON.stringify({
-      "Id": {
-        "$in": indeces
-      }
-    }));
+    let filter = {
+      'Id': { '$in': ids }
+    };
+    let updateObj = {
+      Deleted: false,
+      Done: false
+    };
 
-    return this.http.put(
-      BackendService.apiUrl + "Groceries",
-      JSON.stringify({
-        Deleted: false,
-        Done: false
-      }),
-      { headers: headers }
-    )
-    .map(res => res.json())
-    .map(data => {
-      this.allItems.forEach((grocery) => {
-        if (grocery.deleted && grocery.done) {
-          grocery.deleted = false;
-          grocery.done = false;
-        }
+    let updatePromise = this.groceryData.update(updateObj, filter)
+      .then(res => {
+        this.allItems.forEach((grocery) => {
+          if (grocery.deleted && grocery.done) {
+            grocery.deleted = false;
+            grocery.done = false;
+          }
+        });
       });
-      this.publishUpdates();
-    })
-    .catch(this.handleErrors);
+    return Observable.fromPromise(updatePromise)
+      .catch(this.handleErrors);
   }
 
-  private put(id: string, data: Object) {
-    return this.http.put(
-      BackendService.apiUrl + "Groceries/" + id,
-      JSON.stringify(data),
-      { headers: this.getHeaders() }
-    )
-    .catch(this.handleErrors);
+  private put(id: string, data: any) {
+    data = data || {};
+    data.Id = id;
+    let updatePromise = this.groceryData.updateSingle(data);
+    return Observable.fromPromise(updatePromise)
+      .catch(this.handleErrors);
   }
 
-  private updateSingleItem(item: Grocery, newItem: Grocery) {
-    const index = this.allItems.indexOf(item);
-    this.allItems.splice(index, 1, newItem);
-  }
+  // private updateSingleItem(item: Grocery, newItem: Grocery) {
+  //   const index = this.allItems.indexOf(item);
+  //   this.allItems.splice(index, 1, newItem);
+  // }
 
   private publishUpdates() {
     // Make sure all updates are published inside NgZone so that change detection is triggered if needed
@@ -127,12 +111,11 @@ export class GroceryService {
     });
   }
 
-  private getHeaders() {
-    let headers = new Headers();
-    headers.append("Content-Type", "application/json");
-    headers.append("Authorization", "Bearer " + BackendService.token);
-    return headers;
-  }
+  // private getHeaders() {
+  //   let headers = new Headers();
+  //   headers.append("Content-Type", "application/json");
+  //   return headers;
+  // }
 
   private handleErrors(error: Response) {
     console.log(error);

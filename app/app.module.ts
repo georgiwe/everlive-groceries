@@ -27,7 +27,7 @@ setStatusBarColors();
     GroceriesModule,
   ],
   declarations: [
-      AppComponent,
+    AppComponent,
   ],
   bootstrap: [AppComponent]
 })
