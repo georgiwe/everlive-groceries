@@ -1,10 +1,10 @@
 import { Injectable } from "@angular/core";
-import { Http, Headers, Response } from "@angular/http";
+import { Response } from "@angular/http";
 import { Observable } from "rxjs/Rx";
 import "rxjs/add/operator/do";
 import "rxjs/add/operator/map";
 
-import { Data, Users } from './everlive-interfaces';
+import { Users } from './everlive-interfaces';
 
 import { User } from "./user.model";
 import { BackendService } from "./backend.service";
@@ -12,18 +12,14 @@ import { BackendService } from "./backend.service";
 @Injectable()
 export class LoginService {
   private userManagement: Users;
-  constructor(private http: Http, private everliveService: BackendService) {
+
+  constructor(private everliveService: BackendService) {
     this.userManagement = this.everliveService.userManagement;
   }
 
   register(user: User) {
-    let userInfo = {
-      DisplayName: user.displayName,
-      Email: user.email
-    };
-    console.log('register called: ' + JSON.stringify(userInfo));
-    let registerPromise = this.userManagement.register(user.email, user.password, userInfo)
-      .then(this.handleErrors, this.handleErrors);
+    let registerPromise = this.userManagement.register(user.email, user.password, null);
+
     return Observable.fromPromise(registerPromise)
       .catch(this.handleErrors);
   }
@@ -39,14 +35,14 @@ export class LoginService {
       .catch(this.handleErrors);
   }
 
-
   resetPassword(username: string) {
-    return Observable.fromPromise(this.userManagement.resetPassword({ Username: username }))
+    let resetPasswordPromise = this.userManagement.resetPassword({ Username: username });
+    return Observable.fromPromise(resetPasswordPromise)
       .catch(this.handleErrors);
   }
 
-  handleErrors(error) {
-    console.log(JSON.stringify(error));
-    return Promise.reject(error.message);
+  handleErrors(error: Response) {
+    console.log(JSON.stringify(error.json()));
+    return Observable.throw(error);
   }
 }

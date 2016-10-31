@@ -44,7 +44,7 @@
     "reflect-metadata": "^0.1.8",
     "rxjs": "5.0.0-beta.12",
     "tns-core-modules": "^2.3.0",
-    "everlive-sdk": "C:\\Work\\everlive-js-sdk"
+    "everlive-sdk": "1.7.3"
   },
   "devDependencies": {
     "zone.js": "~0.6.21",

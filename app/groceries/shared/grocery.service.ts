@@ -1,5 +1,5 @@
 import { Injectable, NgZone } from "@angular/core";
-import { Http, Headers, Response, ResponseOptions } from "@angular/http";
+import { Response, ResponseOptions } from "@angular/http";
 import { Observable, BehaviorSubject } from "rxjs/Rx";
 import "rxjs/add/operator/map";
 
@@ -15,7 +15,7 @@ export class GroceryService {
   private allItems: Array<Grocery> = [];
   private groceryData: Data<GroceryEntry>;
 
-  constructor(private http: Http, private zone: NgZone, private backendService: BackendService) {
+  constructor(private zone: NgZone, private backendService: BackendService) {
     this.groceryData = this.backendService.getDataObject<GroceryEntry>('Groceries');
   }
 
@@ -24,12 +24,14 @@ export class GroceryService {
     query.orderDesc('ModifiedAt');
 
     let loadPromise = this.groceryData.get(query)
-      .then(data => {
-        this.allItems = data.result.map(e => new Grocery(e.Id, e.Name, e.Done, e.Deleted));
-        this.publishUpdates();
-      });
+      .then(data => data.result);
 
     return Observable.from(loadPromise)
+      .map(entries => entries.map(e => new Grocery(e.Id, e.Name, e.Done, e.Deleted)))
+      .do(groceries => {
+        this.allItems = groceries;
+        this.publishUpdates();
+      })
       .catch(this.handleErrors);
   }
 
@@ -46,7 +48,6 @@ export class GroceryService {
 
   setDeleteFlag(item: Grocery) {
     return this.put(item.id, { Deleted: true, Done: false })
-      .map(res => res.json())
       .map(data => {
         item.deleted = true;
         item.done = false;
@@ -57,8 +58,7 @@ export class GroceryService {
   toggleDoneFlag(item: Grocery) {
     item.done = !item.done;
     this.publishUpdates();
-    return this.put(item.id, { Done: !item.done })
-      .map(res => res.json());
+    return this.put(item.id, { Done: item.done });
   }
 
   restore() {
@@ -77,31 +77,26 @@ export class GroceryService {
       Done: false
     };
 
-    let updatePromise = this.groceryData.update(updateObj, filter)
-      .then(res => {
-        this.allItems.forEach((grocery) => {
+    let updatePromise = this.groceryData.update(updateObj, filter);
+    return Observable.fromPromise(updatePromise)
+      .do(() => {
+        this.allItems.forEach(grocery => {
           if (grocery.deleted && grocery.done) {
             grocery.deleted = false;
             grocery.done = false;
           }
         });
-      });
-    return Observable.fromPromise(updatePromise)
+      })
       .catch(this.handleErrors);
   }
 
   private put(id: string, data: any) {
     data = data || {};
     data.Id = id;
-    let updatePromise = this.groceryData.updateSingle(data);
+    let updatePromise = this.groceryData.updateSingle(data)
     return Observable.fromPromise(updatePromise)
       .catch(this.handleErrors);
   }
-
-  // private updateSingleItem(item: Grocery, newItem: Grocery) {
-  //   const index = this.allItems.indexOf(item);
-  //   this.allItems.splice(index, 1, newItem);
-  // }
 
   private publishUpdates() {
     // Make sure all updates are published inside NgZone so that change detection is triggered if needed
@@ -111,14 +106,8 @@ export class GroceryService {
     });
   }
 
-  // private getHeaders() {
-  //   let headers = new Headers();
-  //   headers.append("Content-Type", "application/json");
-  //   return headers;
-  // }
-
   private handleErrors(error: Response) {
-    console.log(error);
+    console.log(JSON.stringify(error));
     return Observable.throw(error);
   }
 }
